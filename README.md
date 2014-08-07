@@ -10,11 +10,11 @@ The package is in its early stages of developement. Use at your own risk.
 Usage
 =====
 
-```go
+```
 go get -u gopkg.in/kornel661/nserv.v0
 ```
 or
-```
+```go
 import "gopkg.in/kornel661/nserv.v0"
 ```
 See [package import site](http://gopkg.in/kornel661/nserv.v0) and [gopkg.in](http://labix.org/gopkg.in) for import path convention.
