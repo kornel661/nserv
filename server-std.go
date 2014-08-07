@@ -1,3 +1,5 @@
+package nserv
+
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -6,8 +8,6 @@
 
 // A bit modified standard library, see:
 // http://golang.org/src/pkg/net/http/server.go
-
-package http
 
 import (
 	"bufio"
@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -46,7 +47,7 @@ var (
 // and that the HTTP server can move on to the next request on
 // the connection.
 type Handler interface {
-	ServeHTTP(ResponseWriter, *Request)
+	ServeHTTP(ResponseWriter, *http.Request)
 }
 
 // A ResponseWriter interface is used by an HTTP handler to
@@ -55,7 +56,7 @@ type ResponseWriter interface {
 	// Header returns the header map that will be sent by WriteHeader.
 	// Changing the header after a call to WriteHeader (or Write) has
 	// no effect.
-	Header() Header
+	Header() http.Header
 
 	// Write writes the data to the connection as part of an HTTP reply.
 	// If WriteHeader has not yet been called, Write calls WriteHeader(http.StatusOK)
@@ -229,7 +230,7 @@ type chunkWriter struct {
 	// at the time of res.WriteHeader, if res.WriteHeader is
 	// called and extra buffering is being done to calculate
 	// Content-Type and/or Content-Length.
-	header Header
+	header http.Header
 
 	// wroteHeader tells whether the header's been written to "the
 	// wire" (or rather: w.conn.buf). this is unlike
@@ -293,9 +294,9 @@ func (cw *chunkWriter) close() {
 // A response represents the server side of an HTTP response.
 type response struct {
 	conn          *conn
-	req           *Request // request for this response
-	wroteHeader   bool     // reply header has been (logically) written
-	wroteContinue bool     // 100 Continue response was written
+	req           *http.Request // request for this response
+	wroteHeader   bool          // reply header has been (logically) written
+	wroteContinue bool          // 100 Continue response was written
 
 	w  *bufio.Writer // buffers output in chunks to chunkWriter
 	cw chunkWriter
@@ -305,7 +306,7 @@ type response struct {
 	// which may be retained and mutated even after WriteHeader.
 	// handlerHeader is copied into cw.header at WriteHeader
 	// time, and privately mutated thereafter.
-	handlerHeader Header
+	handlerHeader http.Header
 	calledHeader  bool // handler accessed handlerHeader via Header
 
 	written       int64 // number of bytes written in body
@@ -389,7 +390,7 @@ func (w *response) ReadFrom(src io.Reader) (n int64, err error) {
 	// sendfile path:
 
 	if !w.wroteHeader {
-		w.WriteHeader(StatusOK)
+		w.WriteHeader(http.StatusOK)
 	}
 
 	if w.needsSniff() {
@@ -515,7 +516,7 @@ type expectContinueReader struct {
 
 func (ecr *expectContinueReader) Read(p []byte) (n int, err error) {
 	if ecr.closed {
-		return 0, ErrBodyReadAfterClose
+		return 0, http.ErrBodyReadAfterClose
 	}
 	if !ecr.resp.wroteContinue && !ecr.resp.conn.hijacked() {
 		ecr.resp.wroteContinue = true
@@ -576,8 +577,8 @@ func (c *conn) readRequest() (w *response, err error) {
 	}
 
 	c.lr.N = c.server.initialLimitedReaderSize()
-	var req *Request
-	if req, err = ReadRequest(c.buf.Reader); err != nil {
+	var req *http.Request
+	if req, err = http.ReadRequest(c.buf.Reader); err != nil {
 		if c.lr.N == 0 {
 			return nil, errTooLarge
 		}
@@ -591,7 +592,7 @@ func (c *conn) readRequest() (w *response, err error) {
 	w = &response{
 		conn:          c,
 		req:           req,
-		handlerHeader: make(Header),
+		handlerHeader: make(http.Header),
 		contentLength: -1,
 	}
 	w.cw.res = w
@@ -599,7 +600,7 @@ func (c *conn) readRequest() (w *response, err error) {
 	return w, nil
 }
 
-func (w *response) Header() Header {
+func (w *response) Header() http.Header {
 	if w.cw.header == nil && w.wroteHeader && !w.cw.wroteHeader {
 		// Accessing the header between logically writing it
 		// and physically writing it means we need to allocate
@@ -884,7 +885,7 @@ var (
 
 // statusLine returns a response Status-Line (RFC 2616 Section 6.1)
 // for the given request and response status code.
-func statusLine(req *Request, code int) string {
+func statusLine(req *http.Request, code int) string {
 	// Fast path:
 	key := code
 	proto11 := req.ProtoAtLeast(1, 1)
@@ -1231,10 +1232,10 @@ func (w *response) CloseNotify() <-chan bool {
 // ordinary functions as HTTP handlers.  If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
 // Handler object that calls f.
-type HandlerFunc func(ResponseWriter, *Request)
+type HandlerFunc func(ResponseWriter, *http.Request)
 
 // ServeHTTP calls f(w, r).
-func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *http.Request) {
 	f(w, r)
 }
 
@@ -1249,7 +1250,7 @@ func Error(w ResponseWriter, error string, code int) {
 }
 
 // NotFound replies to the request with an HTTP 404 not found error.
-func NotFound(w ResponseWriter, r *Request) { Error(w, "404 page not found", StatusNotFound) }
+func NotFound(w ResponseWriter, r *http.Request) { Error(w, "404 page not found", StatusNotFound) }
 
 // NotFoundHandler returns a simple request handler
 // that replies to each request with a ``404 page not found'' reply.
@@ -1264,7 +1265,7 @@ func StripPrefix(prefix string, h Handler) Handler {
 	if prefix == "" {
 		return h
 	}
-	return HandlerFunc(func(w ResponseWriter, r *Request) {
+	return HandlerFunc(func(w ResponseWriter, r *http.Request) {
 		if p := strings.TrimPrefix(r.URL.Path, prefix); len(p) < len(r.URL.Path) {
 			r.URL.Path = p
 			h.ServeHTTP(w, r)
@@ -1276,7 +1277,7 @@ func StripPrefix(prefix string, h Handler) Handler {
 
 // Redirect replies to the request with a redirect to url,
 // which may be a path relative to the request path.
-func Redirect(w ResponseWriter, r *Request, urlStr string, code int) {
+func Redirect(w ResponseWriter, r *http.Request, urlStr string, code int) {
 	if u, err := url.Parse(urlStr); err == nil {
 		// If url was relative, make absolute by
 		// combining with request path.
@@ -1353,7 +1354,7 @@ type redirectHandler struct {
 	code int
 }
 
-func (rh *redirectHandler) ServeHTTP(w ResponseWriter, r *Request) {
+func (rh *redirectHandler) ServeHTTP(w ResponseWriter, r *http.Request) {
 	Redirect(w, r, rh.url, rh.code)
 }
 
@@ -1468,7 +1469,7 @@ func (mux *ServeMux) match(path string) (h Handler, pattern string) {
 //
 // If there is no registered handler that applies to the request,
 // Handler returns a ``page not found'' handler and an empty pattern.
-func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) {
+func (mux *ServeMux) Handler(r *http.Request) (h Handler, pattern string) {
 	if r.Method != "CONNECT" {
 		if p := cleanPath(r.URL.Path); p != r.URL.Path {
 			_, pattern = mux.handler(r.Host, p)
@@ -1502,7 +1503,7 @@ func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) {
 
 // ServeHTTP dispatches the request to the handler whose
 // pattern most closely matches the request URL.
-func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
+func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *http.Request) {
 	if r.RequestURI == "*" {
 		if r.ProtoAtLeast(1, 1) {
 			w.Header().Set("Connection", "close")
@@ -1554,7 +1555,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 }
 
 // HandleFunc registers the handler function for the given pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *http.Request)) {
 	mux.Handle(pattern, HandlerFunc(handler))
 }
 
@@ -1566,7 +1567,7 @@ func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, h
 // HandleFunc registers the handler function for the given pattern
 // in the DefaultServeMux.
 // The documentation for ServeMux explains how patterns are matched.
-func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+func HandleFunc(pattern string, handler func(ResponseWriter, *http.Request)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
 
@@ -1665,7 +1666,7 @@ type serverHandler struct {
 	srv *Server
 }
 
-func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *Request) {
+func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *http.Request) {
 	handler := sh.srv.Handler
 	if handler == nil {
 		handler = DefaultServeMux
@@ -1884,7 +1885,7 @@ func (h *timeoutHandler) errorBody() string {
 	return "<html><head><title>Timeout</title></head><body><h1>Timeout</h1></body></html>"
 }
 
-func (h *timeoutHandler) ServeHTTP(w ResponseWriter, r *Request) {
+func (h *timeoutHandler) ServeHTTP(w ResponseWriter, r *http.Request) {
 	done := make(chan bool, 1)
 	tw := &timeoutWriter{w: w}
 	go func() {
@@ -1913,7 +1914,7 @@ type timeoutWriter struct {
 	wroteHeader bool
 }
 
-func (tw *timeoutWriter) Header() Header {
+func (tw *timeoutWriter) Header() http.Header {
 	return tw.w.Header()
 }
 
@@ -1959,7 +1960,7 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 // globalOptionsHandler responds to "OPTIONS *" requests.
 type globalOptionsHandler struct{}
 
-func (globalOptionsHandler) ServeHTTP(w ResponseWriter, r *Request) {
+func (globalOptionsHandler) ServeHTTP(w ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Length", "0")
 	if r.ContentLength != 0 {
 		// Read up to 4KB of OPTIONS body (as mentioned in the
@@ -1991,14 +1992,14 @@ var eofReader = &struct {
 var _ io.WriterTo = eofReader
 
 // initNPNRequest is an HTTP handler that initializes certain
-// uninitialized fields in its *Request. Such partially-initialized
+// uninitialized fields in its *http.Request. Such partially-initialized
 // Requests come from NPN protocol handlers.
 type initNPNRequest struct {
 	c *tls.Conn
 	h serverHandler
 }
 
-func (h initNPNRequest) ServeHTTP(rw ResponseWriter, req *Request) {
+func (h initNPNRequest) ServeHTTP(rw ResponseWriter, req *http.Request) {
 	if req.TLS == nil {
 		req.TLS = &tls.ConnectionState{}
 		*req.TLS = h.c.ConnectionState()
