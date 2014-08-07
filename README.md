@@ -2,7 +2,7 @@ nserv
 =====
 
 nserv (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit* and *throttling*.
-It's been inspired by the [manners package]().
+It's been inspired by the [manners package](https://github.com/braintree/manners).
 
 The package is in its early stages of developement. Use at your own risk.
 
