@@ -13,5 +13,10 @@ go get gopkg.in/kornel661/nserv.v0
 alternative path (to the developement version):
 github.com/kornel661/nserv
 
+Note:
+If you use the standard net/http package you may want to switch to
+gopkg.in/kornel661/http.v0
+which is net/http with some new exported symbols. It integrates better with
+nserv (as nserv uses it internally).
 */
 package nserv
