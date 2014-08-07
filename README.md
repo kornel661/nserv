@@ -24,4 +24,4 @@ Goals
 =====
 
 * This package is intended as a light extension of Go's standard implementation.
-* Performance is important but not by overcomplicating the code or reimplementing standard library (more performance-oriented version of the package may follow).
+* Performance is important but not by overcomplicating the code or reimplementing significant parts of the standard library.
