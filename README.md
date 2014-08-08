@@ -1,7 +1,7 @@
 nserv
 =====
 
-nserv (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit* and *throttling*.
+[nserv](http://godoc.org/gopkg.in/kornel661/nserv.v0) (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit* and *throttling*.
 It's been inspired by the [manners package](https://github.com/braintree/manners).
 
 The package is in its early stages of developement.
@@ -27,4 +27,4 @@ Goals
 
 * This package is intended as a light extension of Go's standard implementation.
 * Performance is important but not by overcomplicating the code.
-* Right now nserv uses internally slightly modified version of net/http package. Unfortunately, this approach demands some type conversions. Once nserv is more mature and tested this situation will hopefully change.
+* Right now nserv uses internally slightly modified version of net/http package. Unfortunately, this approach demands some type conversions. Once nserv is more mature and tested this situation will hopefully improve.
