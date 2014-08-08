@@ -18,5 +18,8 @@ If you use the standard net/http package you may want to switch to
 gopkg.in/kornel661/http.v0
 which is net/http with some new exported symbols. It integrates better with
 nserv (as nserv uses it internally).
+
+Needs Go 1.3.
+
 */
 package nserv

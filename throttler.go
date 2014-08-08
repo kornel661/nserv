@@ -45,7 +45,7 @@ func (srv *Server) throttler() {
 		}
 	}
 	// server is shutting down, switch off keep-alive connections
-	srv.SetKeepAlivesEnabled(false)
+	srv.serv.SetKeepAlivesEnabled(false)
 	// reclaim all tokens (i.e., wait for all connections to finish)
 	for i := 0; i < instMax; i++ {
 		<-srv.throttle

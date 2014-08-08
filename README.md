@@ -7,6 +7,7 @@ It's been inspired by the [manners package](https://github.com/braintree/manners
 The package is in its early stages of developement.
 Use at your own risk (or better wait for a version that actually works, should be coming very soon).
 
+Needs Go 1.3.
 
 Usage
 =====
@@ -25,4 +26,5 @@ Goals
 =====
 
 * This package is intended as a light extension of Go's standard implementation.
-* Performance is important but not by overcomplicating the code or reimplementing significant parts of the standard library.
+* Performance is important but not by overcomplicating the code.
+* Right now nserv uses internally slightly modified version of net/http package. Unfortunately, this approach demands some type conversions. Once nserv is more mature and tested this situation will hopefully change.

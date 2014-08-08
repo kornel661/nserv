@@ -10,8 +10,7 @@ import (
 // calls Serve to handle requests on incoming connections.  If
 // srv.Addr is blank, ":http" is used.
 func (s *Server) ListenAndServe() error {
-	srv := s.Server
-	addr := srv.Addr
+	addr := s.Addr
 	if addr == "" {
 		addr = ":http"
 	}
@@ -32,14 +31,13 @@ func (s *Server) ListenAndServe() error {
 //
 // If srv.Addr is blank, ":https" is used.
 func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
-	srv := s.Server
-	addr := srv.Addr
+	addr := s.Addr
 	if addr == "" {
 		addr = ":https"
 	}
 	config := &tls.Config{}
-	if srv.TLSConfig != nil {
-		*config = *srv.TLSConfig
+	if s.TLSConfig != nil {
+		*config = *s.TLSConfig
 	}
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
