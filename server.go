@@ -133,8 +133,8 @@ func (srv *Server) SetThrottle(n int) error {
 
 // Stop stops running server and returns a receiving channel which signals when
 // the server stops. In other words:
-// srv.Stop() // merely signals the server to finish
-// <-srv.Stop() // signals the server to stop and "returns" only when the server stopped
+// 	srv.Stop() // merely signals the server to finish
+// 	<-srv.Stop() // signals the server to stop and "returns" only when the server stopped
 //
 // It is "thread-safe" and can be invoked multiple times.
 func (srv *Server) Stop() <-chan token {
@@ -153,6 +153,8 @@ func (srv *Server) Stop() <-chan token {
 // Serve accepts incoming connections on the Listener l, creating a
 // new service goroutine for each.  The service goroutines read requests and
 // then call srv.Handler to reply to them.
+//
+// Won't create more goroutines than instantenous throttling limit.
 //
 // Based on the standard library, see:
 // http://golang.org/src/pkg/net/http/server.go?s=50405:50451#L1684
