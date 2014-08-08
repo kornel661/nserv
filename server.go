@@ -159,6 +159,7 @@ func (srv *Server) Stop() <-chan token {
 // Based on the standard library, see:
 // http://golang.org/src/pkg/net/http/server.go?s=50405:50451#L1684
 func (srv *Server) Serve(l net.Listener) error {
+	log.Println("srv.Serve(...)")
 	// the 'actual' server
 	serv := srv.serv
 	// copy options over

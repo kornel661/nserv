@@ -8,29 +8,26 @@ func (srv *Server) throttler() {
 		instMax   = 0 // instantenous max == number of throttling tokens at large
 		targetMax = 0 // target instantenous max, we want to make instMax = targetMax
 	)
-	// removes a token
+	// removes a token from the jar
 	decrease := func() {
 		select {
 		case <-srv.throttle:
 			instMax--
-		case newMax := <-srv.setMaxThrottle:
-			targetMax = newMax
+		case targetMax = <-srv.setMaxThrottle:
 		}
 	}
-	// adds a token
+	// adds a token to the jar
 	increase := func() {
 		select {
 		case srv.throttle <- token{}:
 			instMax++
-		case newMax := <-srv.setMaxThrottle:
-			targetMax = newMax
+		case targetMax = <-srv.setMaxThrottle:
 		}
 	}
 	// listens for a new instMax
 	idle := func() {
 		select {
-		case newMax := <-srv.setMaxThrottle:
-			targetMax = newMax
+		case targetMax = <-srv.setMaxThrottle:
 		}
 	}
 	// loop until signaled to exit (targetMax < 0)

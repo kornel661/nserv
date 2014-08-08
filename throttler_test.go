@@ -1,6 +1,7 @@
 package nserv
 
 import (
+	"runtime"
 	"testing"
 	"time"
 )
@@ -35,11 +36,29 @@ func TestThrottler(t *testing.T) {
 
 	for i := 1; i <= 10; i++ {
 		if srv.SetThrottle(max/i) != nil {
-			t.Errorf("Error setting throttle max/%d.", i)
+			t.Errorf("loop1: Error setting throttle max/%d.", i)
 		}
 	}
+	for i := 10; i >= 1; i-- {
+		if srv.SetThrottle(max/i) != nil {
+			t.Errorf("loop2: Error setting throttle max/%d.", i)
+		}
+	}
+	for i := 1; i <= 10; i++ {
+		if srv.SetThrottle(max/i) != nil {
+			t.Errorf("loop3: Error setting throttle max/%d.", i)
+		}
+		runtime.Gosched()
+	}
+	runtime.Gosched()
 	time.Sleep(sleepInt) // wait for tokens
 	if l := len(srv.throttle); l != max/10 {
 		t.Errorf("Number of throtte tokens is %d instead of %d.", l, max/10)
+	}
+
+	srv.setMaxThrottle <- -1 // signal the end
+	<-srv.finished           // wait for throttler to finish
+	if len(srv.throttle) > 0 {
+		t.Error("tokens left in srv.throttle after finish.")
 	}
 }
