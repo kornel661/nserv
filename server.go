@@ -141,7 +141,9 @@ func (srv *Server) Stop() <-chan token {
 	ch := make(chan token, 1)
 	select {
 	case srv.finish <- token{}: // signal to stop
+		log.Println("Stop: srv.finish <- token{} - done")
 	default: // srv.finish is full, sb has already signalled
+		log.Printf("srv.Stop(): srv.finish is full.")
 	}
 	go func() {
 		srv.waitShutdown()
@@ -185,11 +187,15 @@ func (srv *Server) Serve(l net.Listener) error {
 	defer l.Close()
 	var tempDelay time.Duration // how long to sleep on accept failure
 	for {
+		log.Println("Serve: in the loop.")
 		if !srv.takeToken() {
+			log.Println("Serve: shutting down")
 			// we've been signalled to finish, pass the message to throttler goroutine
 			srv.setMaxThrottle <- -1
+			log.Println("Serve: returning nil")
 			return nil
 		}
+		log.Println("Serve: token taken")
 		rw, e := l.Accept()
 		if e != nil {
 			if ne, ok := e.(net.Error); ok && ne.Temporary() {

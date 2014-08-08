@@ -1,11 +1,14 @@
 package nserv
 
+import "log"
+
 // tokens used for communication via channels
 type token struct{}
 
 // takeToken takes one token from the srv.throttle jar and returns true
 // or accepts srv.finish token and returns false
 func (srv *Server) takeToken() bool {
+	log.Println("srv.takeToken...")
 	select {
 	case <-srv.throttle:
 		return true
