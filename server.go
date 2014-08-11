@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+// tokens used for communication via channels
+type token struct{}
+
 // New returns a new nserv.Server initialized with server options and throttleMax.
 // Argument throttleMax has the same meaning as for the server initialization,
 // serv.Initialize(...)
@@ -68,6 +71,8 @@ type Server struct {
 	finish         chan token  // channel used to signal the server to quit (by srv.Stop())
 	finished       chan token  // channel used to signal that the server finished processing all requests
 	setMaxThrottle chan int    // send a new instantenous limit for number of requests to this channel (<0 to exit)
+
+	serverError chan error
 }
 
 // Initialize given server. It is an error to initialize a server multiple times.
@@ -90,6 +95,7 @@ func (srv *Server) Initialize(throttleMax, initialMax int) {
 	}
 	srv.finish = make(chan token, 1)
 	srv.finished = make(chan token, 1)
+	srv.serverError = make(chan error, 1)
 
 	if throttleMax >= 0 {
 		srv.setMaxThrottle = make(chan int, 1)
@@ -131,20 +137,33 @@ func (srv *Server) SetThrottle(n int) error {
 	return nil
 }
 
-// Stop stops running server and returns a receiving channel which signals when
+// Stop stops running server and returns immediately.
+//
+// It is "thread-safe" and can be invoked multiple times.
+func (srv *Server) Stop() {
+	select {
+	case srv.finish <- token{}: // signal to stop
+	default: // srv.finish is full, sb has already signalled
+	}
+}
+
+// StopWait stops running server and returns when all connections terminate.
+//
+// It is "thread-safe" and can be invoked multiple times.
+func (srv *Server) StopWait() {
+	srv.Stop()
+	srv.waitShutdown()
+}
+
+// StopChan stops running server and returns a receiving channel which signals when
 // the server stops. In other words:
 // 	srv.Stop() // merely signals the server to finish
 // 	<-srv.Stop() // signals the server to stop and "returns" only when the server stopped
 //
 // It is "thread-safe" and can be invoked multiple times.
-func (srv *Server) Stop() <-chan token {
+func (srv *Server) StopChan() <-chan token {
 	ch := make(chan token, 1)
-	select {
-	case srv.finish <- token{}: // signal to stop
-		log.Println("Stop: srv.finish <- token{} - done")
-	default: // srv.finish is full, sb has already signalled
-		log.Printf("srv.Stop(): srv.finish is full.")
-	}
+	srv.Stop()
 	go func() {
 		srv.waitShutdown()
 		ch <- token{} // signal the caller server's stopped
@@ -161,7 +180,6 @@ func (srv *Server) Stop() <-chan token {
 // Based on the standard library, see:
 // http://golang.org/src/pkg/net/http/server.go?s=50405:50451#L1684
 func (srv *Server) Serve(l net.Listener) error {
-	log.Println("srv.Serve(...)")
 	// the 'actual' server
 	serv := srv.serv
 	// copy options over
@@ -179,54 +197,59 @@ func (srv *Server) Serve(l net.Listener) error {
 	}
 	serv.ErrorLog = srv.ErrorLog
 	serv.TLSNextProto = tlsNPC(srv.TLSNextProto)
+	// convert ConnState and make the connections return tokens on exit
 	serv.ConnState = srv.wrapConnState(srv.ConnState)
 
-	// wait for all connections before shutting down
+	// wait for all connections to finish before shutting down
 	defer srv.waitShutdown()
-	// clean-up
-	defer l.Close()
-	var tempDelay time.Duration // how long to sleep on accept failure
+
+	// accept connections from a 'channel listener'
+	conns := srv.chanListener(l)
+mainLoop:
 	for {
-		log.Println("Serve: in the loop.")
-		if !srv.takeToken() {
-			log.Println("Serve: shutting down")
-			// we've been signalled to finish, pass the message to throttler goroutine
-			srv.setMaxThrottle <- -1
-			log.Println("Serve: returning nil")
-			return nil
-		}
-		log.Println("Serve: token taken")
-		rw, e := l.Accept()
-		if e != nil {
-			if ne, ok := e.(net.Error); ok && ne.Temporary() {
-				if tempDelay == 0 {
-					tempDelay = 5 * time.Millisecond
-				} else {
-					tempDelay *= 2
-				}
-				if max := 1 * time.Second; tempDelay > max {
-					tempDelay = max
-				}
-				serv.Logf("http: Accept error: %v; retrying in %v", e, tempDelay)
-				time.Sleep(tempDelay)
-				// give the token back
-				srv.replaceToken()
-				continue
+		select {
+		case <-srv.throttle: // get token
+			select {
+			case rw := <-conns: // get connection
+				srv.serviceConnection(rw, true)
+			case <-srv.finish: // received signal to finish
+				// give the token back:
+				srv.throttle <- token{}
+				break mainLoop
 			}
-			// give the token back
-			srv.replaceToken()
-			// signal finish to the throttler goroutine
-			srv.setMaxThrottle <- 1
-			return e
+		case <-srv.finish:
+			break mainLoop
 		}
-		tempDelay = 0
-		c, err := serv.NewConn(rw)
-		if err != nil {
+	}
+	l.Close()
+	srv.throttlerStop()
+
+	// service the (possibly) remaining connection
+	if rw, ok := <-conns; ok {
+		srv.serviceConnection(rw, false)
+	}
+	return <-srv.serverError
+}
+
+// serviceConnection services connection conn.
+// Return a token to the jar in case of error if replace is true.
+func (srv *Server) serviceConnection(conn net.Conn, replace bool) {
+	c, err := srv.serv.NewConn(conn)
+	if err != nil {
+		if replace {
 			// give the token back:
-			srv.replaceToken()
-			continue
+			srv.throttle <- token{}
 		}
+	} else {
 		c.SetState(c.Getrwc(), http.StateNew) // before Serve can return
 		go c.Serve()
 	}
+}
+
+// waits for all requests to finish processing
+func (srv *Server) waitShutdown() {
+	// wait for all requests to finish
+	<-srv.finished
+	// replace token
+	srv.finished <- token{}
 }

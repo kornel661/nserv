@@ -51,3 +51,12 @@ func (srv *Server) throttler() {
 	// signal we're finished
 	srv.finished <- token{}
 }
+
+// throttlerStop signals the throttler goroutine to start shutdown procedure:
+// to wait for all requests to finish and signal on srv.finished at the end.
+func (srv *Server) throttlerStop() {
+	select {
+	case srv.setMaxThrottle <- -1: // signal to stop
+	default: // throttler's been already signalled to stop
+	}
+}

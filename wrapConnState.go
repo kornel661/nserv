@@ -12,7 +12,8 @@ func (srv *Server) wrapConnState(fun func(net.Conn, stdtp.ConnState)) func(net.C
 		// put the token back to the jar when finished
 		switch newState {
 		case http.StateClosed, http.StateHijacked:
-			srv.replaceToken()
+			// return token to the jar when connection closes
+			srv.throttle <- token{}
 		}
 	}
 }

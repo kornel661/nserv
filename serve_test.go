@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	deadlockDelay = 1 * time.Second
-	deadlockTest  = time.Second / 2
+	deadlockDelay = time.Second / 2
+	deadlockTest  = time.Second / 4
 	addr          = "localhost:1234"
 )
 
@@ -39,19 +39,26 @@ func TestInitializeNegative(t *testing.T) {
 func TestServerStartStop0(t *testing.T) {
 	srv := nserv.New(nil, 10)
 	select {
-	case <-srv.Stop():
+	case <-srv.StopChan():
 		t.Error("srv.Stop() returned before the server shut down.")
 	case <-time.After(deadlockTest): // OK
+		t.Log("Waited deadlockTest seconds and nothing. Good.")
 	}
 }
 
 func TestServerStartStop1(t *testing.T) {
 	srv := nserv.New(opts, 10)
 	go srv.Stop()
-	t.Log("starting server, it should terminate almost instantaneously")
+	t.Log("starting server, it should terminate almost instantaneously, without reporting any errors")
 	if err := srv.ListenAndServe(); err != nil {
 		t.Error(err)
 	}
+	t.Log("Waiting for server to shutdown.")
+	srv.StopWait()
+	srv.StopWait()
+	srv.StopWait()
+	srv.StopWait()
+	srv.StopWait()
 }
 
 func TestServerStartStop2(t *testing.T) {
@@ -62,8 +69,8 @@ func TestServerStartStop2(t *testing.T) {
 		}
 	}()
 	select {
-	case <-srv.Stop(): // shouldn't deadlock
+	case <-srv.StopChan(): // shouldn't deadlock
 	case <-time.After(deadlockDelay):
-		t.Error("deadlock")
+		t.Error("Waited deadlockDelay seconds. Deadlock?")
 	}
 }
