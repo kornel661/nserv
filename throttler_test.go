@@ -62,3 +62,13 @@ func TestThrottler(t *testing.T) {
 		t.Error("tokens left in srv.throttle after finish.")
 	}
 }
+
+// BenchmarkThrottler is a poor man's throttler benchmark measuring time it takes
+// to add a token.
+func BenchmarkThrottler(b *testing.B) {
+	srv := New(nil, b.N)
+	for len(srv.throttle) < b.N {
+		runtime.Gosched()
+		//b.Log("runtime.Gosched()")
+	}
+}

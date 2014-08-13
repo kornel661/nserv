@@ -3,6 +3,7 @@ package nserv
 import (
 	"crypto/tls"
 	"gopkg.in/kornel661/http.v0"
+	"log"
 	"net"
 )
 
@@ -14,10 +15,12 @@ func (s *Server) ListenAndServe() error {
 	if addr == "" {
 		addr = ":http"
 	}
+	log.Println("ListenAndServe: new listener...")
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
+	log.Println("ListenAndServe: serve...")
 	return s.Serve(http.NewTcpKeepAliveListener(ln.(*net.TCPListener)))
 }
 

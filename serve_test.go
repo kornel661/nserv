@@ -1,7 +1,10 @@
 package nserv_test
 
 import (
+	"fmt"
 	"gopkg.in/kornel661/nserv.v0"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"testing"
 	"time"
@@ -10,6 +13,7 @@ import (
 const (
 	deadlockDelay = time.Second / 2
 	deadlockTest  = time.Second / 4
+	waitDelay     = 30 * time.Millisecond
 	addr          = "localhost:1234"
 )
 
@@ -51,7 +55,7 @@ func TestServerStartStop1(t *testing.T) {
 	go srv.Stop()
 	t.Log("starting server, it should terminate almost instantaneously, without reporting any errors")
 	if err := srv.ListenAndServe(); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	t.Log("Waiting for server to shutdown.")
 	srv.StopWait()
@@ -73,4 +77,45 @@ func TestServerStartStop2(t *testing.T) {
 	case <-time.After(deadlockDelay):
 		t.Error("Waited deadlockDelay seconds. Deadlock?")
 	}
+}
+
+func TestServingBasic(t *testing.T) {
+	hw := "Hello World!"
+	log.Println("New server...")
+	srv := nserv.New(nil, 10)
+	srv.Addr = addr
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, hw)
+	})
+	log.Println("Starting server...")
+	finished := make(chan struct{})
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			log.Printf("Error listening: %s\n", err)
+			t.Fatal(err)
+		}
+		finished <- struct{}{}
+	}()
+	var (
+		resp *http.Response
+		body []byte
+		err  error
+	)
+	time.Sleep(waitDelay)
+	log.Println("Getting a response...")
+	if resp, err = http.Get("http://" + addr); err != nil {
+		t.Fatal(err)
+	}
+	log.Println("Reading the response...")
+	defer resp.Body.Close()
+	if body, err = ioutil.ReadAll(resp.Body); err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != hw {
+		t.Errorf("Got body `%s`, should be `%s`", body, hw)
+	}
+	log.Println("Stopping server.")
+	srv.Stop()
+	log.Println("Waiting for the server to stop.")
+	<-finished
 }

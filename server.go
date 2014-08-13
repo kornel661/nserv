@@ -124,9 +124,6 @@ func (srv *Server) Initialize(throttleMax, initialMax int) {
 // to end). In other words the throttling limit will be eventually equal to the
 // n provided as the argument (unless it's changed in the meantime).
 func (srv *Server) SetThrottle(n int) error {
-	if srv.throttleMax == 0 {
-		return errors.New("nserv.SetThrottle: throttling is disabled")
-	}
 	if n < 0 {
 		return errors.New("nserv.SetThrottle: cannot set negative limit")
 	}
@@ -193,12 +190,14 @@ func (srv *Server) Serve(l net.Listener) error {
 		serv.Handler = handlerConv{srv.Handler}
 	} else {
 		//  take DefaultServeMux from standard net/http
+		log.Println("server: DefaultServeMux")
 		serv.Handler = handlerConv{stdtp.DefaultServeMux}
 	}
 	serv.ErrorLog = srv.ErrorLog
 	serv.TLSNextProto = tlsNPC(srv.TLSNextProto)
 	// convert ConnState and make the connections return tokens on exit
 	serv.ConnState = srv.wrapConnState(srv.ConnState)
+	log.Printf("server: ConnState: %v\n", serv.ConnState)
 
 	// wait for all connections to finish before shutting down
 	defer srv.waitShutdown()
@@ -221,13 +220,23 @@ mainLoop:
 			break mainLoop
 		}
 	}
+	log.Println("Server: stopping...")
+	// close  listener (which signals 'channel listener' goroutine to finish)
 	l.Close()
-	srv.throttlerStop()
+	// server is shutting down, switch off keep-alive connections
+	srv.serv.SetKeepAlivesEnabled(false)
+	// stop throttling goroutine
+	srv.setMaxThrottle <- -1
 
+	log.Println("Server: servicing the last connection...")
 	// service the (possibly) remaining connection
 	if rw, ok := <-conns; ok {
 		srv.serviceConnection(rw, false)
+		// now take the token the connections is going to return when it transitions
+		// to http.StateClosed or http.StateHijacked
+		<-srv.throttle
 	}
+	log.Println("Server: returning...")
 	return <-srv.serverError
 }
 
@@ -248,8 +257,10 @@ func (srv *Server) serviceConnection(conn net.Conn, replace bool) {
 
 // waits for all requests to finish processing
 func (srv *Server) waitShutdown() {
+	log.Println("Server: waitShutdown...")
 	// wait for all requests to finish
 	<-srv.finished
+	log.Println("Server: waitShutdown... returning token")
 	// replace token
 	srv.finished <- token{}
 }

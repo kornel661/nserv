@@ -1,5 +1,7 @@
 package nserv
 
+import "log"
+
 // throttler is run in a separate goroutine. It listens on srv.setMaxThrottle
 // and adds or removes tokens from the srv.throttle channnel.
 // Negative value on srv.setMaxThrottle channel signals exit.
@@ -24,7 +26,7 @@ func (srv *Server) throttler() {
 		case targetMax = <-srv.setMaxThrottle:
 		}
 	}
-	// listens for a new instMax
+	// listens for a new instMax (when instMax == targetMax)
 	idle := func() {
 		select {
 		case targetMax = <-srv.setMaxThrottle:
@@ -41,22 +43,14 @@ func (srv *Server) throttler() {
 			decrease()
 		}
 	}
-	// server is shutting down, switch off keep-alive connections
-	srv.serv.SetKeepAlivesEnabled(false)
+
+	log.Println("throttler: exitting...")
 	// reclaim all tokens (i.e., wait for all connections to finish)
 	for i := 0; i < instMax; i++ {
 		<-srv.throttle
 	}
 	instMax = 0
+	log.Println("throttler: signal finish...")
 	// signal we're finished
 	srv.finished <- token{}
-}
-
-// throttlerStop signals the throttler goroutine to start shutdown procedure:
-// to wait for all requests to finish and signal on srv.finished at the end.
-func (srv *Server) throttlerStop() {
-	select {
-	case srv.setMaxThrottle <- -1: // signal to stop
-	default: // throttler's been already signalled to stop
-	}
 }
