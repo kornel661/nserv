@@ -16,7 +16,7 @@ func ExampleServer() {
 		// do clean-up (close DB connections, etc.)
 	}()
 	// set-up server:
-	srv := &nserv.Server
+	srv := &nserv.Server{}
 	srv.Addr = "localhost:12345"
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))

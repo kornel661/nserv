@@ -37,7 +37,7 @@ func (srv *Server) Serve(listn net.Listener) error {
 	l := limitnet.NewThrottledListener(listn)
 	l.MaxConns(srv.InitialMaxConns)
 	srv.tlist <- l
-	err := srv.Serve(l)
+	err := srv.Server.Serve(l)
 	stopped := !srv.Stop()
 	if err.Error() == "use of closed network connection" && stopped {
 		err = nil // server's been stopped by the user (most probably)
