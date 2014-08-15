@@ -11,7 +11,7 @@ import (
 
 const (
 	// time to wait (let other goroutines do their job first)
-	sleepInt = 1 * time.Millisecond
+	delay = 40 * time.Millisecond
 )
 
 func init() {

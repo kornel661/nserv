@@ -13,9 +13,5 @@ or
 alternative path (to the developement version):
 github.com/kornel661/nserv
 
-Note:
-
-Needs Go 1.3.
-
 */
 package nserv
