@@ -4,6 +4,7 @@ import (
 	"gopkg.in/kornel661/limitnet.v0"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -39,7 +40,7 @@ func (srv *Server) Serve(listn net.Listener) error {
 	srv.tlist <- l
 	err := srv.Server.Serve(l)
 	stopped := !srv.Stop()
-	if err.Error() == "use of closed network connection" && stopped {
+	if strings.Contains(err.Error(), "use of closed network connection") && stopped {
 		err = nil // server's been stopped by the user (most probably)
 	}
 	return err
