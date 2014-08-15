@@ -1,4 +1,4 @@
-package main
+package nserv_test
 
 import (
 	"fmt"
@@ -10,20 +10,18 @@ import (
 	"os/signal"
 )
 
-func main() {
+func ExampleServer() {
 	// initialize database, etc.
-	// initialize()
-	// do clean-up
 	defer func() {
-		// cleanup()
+		// do clean-up (close DB connections, etc.)
 	}()
-	// set-up server
-	srv := nserv.New(nil, 100)
+	// set-up server:
+	srv := &nserv.Server
 	srv.Addr = "localhost:12345"
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 	})
-	// catch signals
+	// catch signals:
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
 	go func() {
@@ -31,8 +29,9 @@ func main() {
 		log.Println("Caught signal. Shutting down gracefully.")
 		srv.Stop()
 	}()
-	// start serving
-	log.Println("Serving at http://localhost:12345/")
-	srv.ListenAndServe()
-	//http.ListenAndServe("localhost:12345", nil)
+	// start serving:
+	log.Printf("Serving at http://%s\n", srv.Addr)
+	if err := srv.ListenAndServe(); err != nil {
+		log.Println(err)
+	}
 }
