@@ -18,7 +18,7 @@ func newServer() *nserv.Server {
 	return srv
 }
 
-func TestServerStop1(t *testing.T) {
+func TestServerStop(t *testing.T) {
 	srv := newServer()
 	finish := make(chan struct{})
 	go func() {
@@ -37,12 +37,11 @@ func TestServerStop1(t *testing.T) {
 	}
 }
 
-// just to test possibly different goroutine ordering
-func TestServerStop2(t *testing.T) {
+func TestServerStopTLS(t *testing.T) {
 	srv := newServer()
 	finish := make(chan struct{})
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
+		if err := srv.ListenAndServeTLS("_test.crt", "_test.key"); err != nil {
 			t.Error(err)
 		}
 		close(finish)
