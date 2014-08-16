@@ -15,7 +15,8 @@ import (
 type Server struct {
 	http.Server                                     // standard net.Server functionality
 	InitialMaxConns int                             // initial limit on simultaneous connections
-	tlist           chan limitnet.ThrottledListener //
+	tlist           chan limitnet.ThrottledListener // list for Close()
+	twlist          chan limitnet.ThrottledListener // list for Wait()
 	initOnce        sync.Once                       // for initialization
 }
 
@@ -23,6 +24,7 @@ type Server struct {
 func (srv *Server) initialize() {
 	srv.initOnce.Do(func() {
 		srv.tlist = make(chan limitnet.ThrottledListener, 1)
+		srv.twlist = make(chan limitnet.ThrottledListener, 1)
 	})
 }
 
@@ -43,7 +45,17 @@ func (srv *Server) Serve(listn net.Listener) error {
 	if strings.Contains(err.Error(), "use of closed network connection") && stopped {
 		err = nil // server's been stopped by the user (most probably)
 	}
+	srv.Wait()
 	return err
+}
+
+// Wait returns only when the server is closed and all connections terminated.
+func (srv *Server) Wait() {
+	srv.initialize()
+	if tl, ok := <-srv.twlist; ok {
+		tl.Wait()
+		close(srv.twlist)
+	}
 }
 
 // Stop gracefully stops a running server. Returns false if server had already
@@ -54,6 +66,7 @@ func (srv *Server) Stop() bool {
 	if tl, ok := <-srv.tlist; ok {
 		tl.Close()
 		close(srv.tlist)
+		srv.twlist <- tl
 		return true
 	}
 	return false
@@ -62,6 +75,8 @@ func (srv *Server) Stop() bool {
 // MaxConns sets new throttling limit (max number of simultaneous connections),
 // returns number of free slots for incoming connections. For n < 0 doesn't change
 // the limit. See limitnet.ThrottledListener for more detailed description.
+//
+// Won't return until srv.Serve is called.
 func (srv *Server) MaxConns(n int) (free int) {
 	srv.initialize()
 	if tl, ok := <-srv.tlist; ok {
