@@ -10,7 +10,7 @@ or
 
 	go get gopkg.in/kornel661/nserv.v0
 
-alternative path (to the developement version):
+alternative path (to the development version):
 github.com/kornel661/nserv
 
 */

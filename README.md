@@ -2,10 +2,10 @@ nserv [![GoDoc](https://godoc.org/gopkg.in/kornel661/nserv.v0?status.svg)](https
 =====
 
 [nserv](http://godoc.org/gopkg.in/kornel661/nserv.v0) (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit* and *throttling*.
-*Throttling* makes it easier to build a DOS-attack-resistant server and *graceful exit* feature makes it easy to write a stopable server with proper clean-up (e.g., closing database connections).
+*Throttling* makes it easier to build a DOS-attack-resistant server and *graceful exit* feature makes it easy to write a stoppable server with proper clean-up (e.g., closing database connections).
 Nserv has been inspired by the [manners package](https://github.com/braintree/manners).
 
-The package is in its early stages of developement.
+The package is in its early stages of development.
 Use at your own risk (or better wait for a version that actually works, should be coming very soon).
 
 Usage
