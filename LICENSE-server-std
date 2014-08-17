@@ -1,4 +1,6 @@
-Copyright (c) 2014 Kornel Maczyński. All rights reserved.
+Parts of the server-std.go file use code from the Go standard library
+governed by the following license.
+
 Copyright (c) 2012 The Go Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -14,8 +16,6 @@ distribution.
    * Neither the name of Google Inc. nor the names of its
 contributors may be used to endorse or promote products derived from
 this software without specific prior written permission.
-   * Conditions of the GPLv3 license (in the LICENSE file) must be
-obeyed.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
