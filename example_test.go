@@ -2,7 +2,7 @@ package nserv_test
 
 import (
 	"fmt"
-	"gopkg.in/kornel661/nserv.v0"
+	"gopkg.in/kornel661/nserv.v1"
 	"html"
 	"log"
 	"net/http"

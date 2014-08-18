@@ -10,14 +10,14 @@ course and only after all connections are closed the server shuts down.
 
 Usage:
 
-	import "gopkg.in/kornel661/nserv.v0"
+	import "gopkg.in/kornel661/nserv.v1"
 
 or
 
-	go get gopkg.in/kornel661/nserv.v0
+	go get gopkg.in/kornel661/nserv.v1
 
-Replace v0 by the version you need, alternative path (to the development
-version v0):
+Replace v1 by the version you need, alternative path (to the development
+version):
 github.com/kornel661/nserv
 */
 package nserv

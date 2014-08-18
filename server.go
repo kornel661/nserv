@@ -1,7 +1,7 @@
 package nserv
 
 import (
-	"gopkg.in/kornel661/limitnet.v0"
+	"gopkg.in/kornel661/limitnet.v1"
 	"net"
 	"net/http"
 	"strings"
@@ -29,7 +29,7 @@ func (srv *Server) initialize() {
 }
 
 // Serve accepts incoming connections on the Listener listn (wrapped with
-// ThrottledListener from the gopkg.in/kornel661/limitnet.v0 package), creating
+// ThrottledListener from the gopkg.in/kornel661/limitnet.v1 package), creating
 // a new service goroutine for each.  The service goroutines read requests and
 // then call srv.Handler to reply to them.
 // Don't close listn. Rather use srv.Stop() method to exit gracefully.
