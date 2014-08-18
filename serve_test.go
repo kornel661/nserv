@@ -60,11 +60,14 @@ func TestThrottling(t *testing.T) {
 	srv.ReadTimeout = 1 * time.Second
 	srv.WriteTimeout = 1 * time.Second
 	max := 10
+	// finish is closed when server finishes
 	finish := make(chan struct{})
+	// counter to chack if throttling limit is obeyed
 	counter := make(chan struct{}, max)
 	for i := 0; i < max; i++ {
 		counter <- struct{}{}
 	}
+	// count via ConnState
 	srv.ConnState = func(conn net.Conn, state http.ConnState) {
 		switch state {
 		case http.StateNew:
@@ -94,6 +97,7 @@ func TestThrottling(t *testing.T) {
 	t.Log("Testing throttling...")
 	srv.MaxConns(max)
 	path := "/test"
+	// getFinished: when a "get" function finishes it puts a token here
 	getFinished := make(chan struct{}, 10*max)
 	get := func() {
 		if resp, err := http.Get("http://" + addr + path); err != nil {
@@ -138,7 +142,7 @@ func TestThrottling(t *testing.T) {
 		// client exited first, test passed
 		<-finish
 	case <-finish:
-		t.Error("Server exited ungracefully.")
+		t.Error("Server (most probably) exited ungracefully.")
 		<-clientDone
 	}
 }
