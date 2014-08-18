@@ -38,6 +38,8 @@ Versions
 
 * Developement version (v0)
   [![GoDoc](https://godoc.org/gopkg.in/kornel661/nserv.v0?status.svg)](https://godoc.org/gopkg.in/kornel661/nserv.v0)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/gopkg.in/kornel661/nserv.v0) [![GoCover](http://gocover.io/_badge/gopkg.in/kornel661/nserv.v0)](http://gocover.io/gopkg.in/kornel661/nserv.v0)
+* Initial version with stable API (v1)
+  [![GoDoc](https://godoc.org/gopkg.in/kornel661/nserv.v1?status.svg)](https://godoc.org/gopkg.in/kornel661/nserv.v1)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/gopkg.in/kornel661/nserv.v1) [![GoCover](http://gocover.io/_badge/gopkg.in/kornel661/nserv.v1)](http://gocover.io/gopkg.in/kornel661/nserv.v1)
 
 
 Goals
@@ -50,4 +52,6 @@ Goals
 Changelog
 =========
 
+* 2014.08.18 (version v1): Created version v1 - its API should be stabe, though
+  it isn't well-tested yet. Methods & fields can be added to the Server struct.
 * 2014.08.16 (version v0): Testing & bug hunting season opened.
