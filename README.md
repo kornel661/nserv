@@ -6,7 +6,7 @@ nserv
 Nserv has been inspired by the [manners](https://github.com/braintree/manners) package.
 
 The package is in its early stages of development (in the sense that hasn't been tested extensively yet).
-API of the v0 version might change without warning, v0 should be considered as a unstable/developement version.
+API of the v0 version might change without warning, v0 should be considered as a unstable/development version.
 
 See [gopkg.in](https://gopkg.in/) on versioning scheme.
 
@@ -52,6 +52,6 @@ Goals
 Changelog
 =========
 
-* 2014.08.18 (version v1): Created version v1 - its API should be stabe, though
+* 2014.08.18 (version v1): Created version v1 - its API should be stable, though
   it isn't well-tested yet. Methods & fields can be added to the Server struct.
 * 2014.08.16 (version v0): Testing & bug hunting season opened.
