@@ -39,7 +39,7 @@ Versions
 ========
 
 * Bleeding-edge development version (github.com/kornel661/nserv)
- [![GoDoc](https://godoc.org/github.com/kornel661/nserv?status.svg)](https://godoc.org/github.com/kornel661/nserv)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/github.com/kornel661/nserv)
+  [![GoDoc](https://godoc.org/github.com/kornel661/nserv?status.svg)](https://godoc.org/github.com/kornel661/nserv)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/github.com/kornel661/nserv)
 * Development version (v0)
   [![GoDoc](https://godoc.org/gopkg.in/kornel661/nserv.v0?status.svg)](https://godoc.org/gopkg.in/kornel661/nserv.v0)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/gopkg.in/kornel661/nserv.v0) [![GoCover](http://gocover.io/_badge/gopkg.in/kornel661/nserv.v0)](http://gocover.io/gopkg.in/kornel661/nserv.v0)
 * Initial version with stable API (v1)
