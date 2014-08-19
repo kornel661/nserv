@@ -6,7 +6,6 @@ Tests internals of nserv.
 
 import (
 	"gopkg.in/kornel661/nserv.v0"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"runtime"
@@ -26,8 +25,13 @@ func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
-func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc) {
+func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
+	LAS func(srv *nserv.Server) error, getFunc func(*testing.T, string)) {
+
 	//srv := newServer()
+	defer func() {
+		http.DefaultServeMux = http.NewServeMux()
+	}()
 	srv.ReadTimeout = 1 * time.Second
 	srv.WriteTimeout = 1 * time.Second
 	max := 10
@@ -42,6 +46,7 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc) {
 	srv.ConnState = func(conn net.Conn, state http.ConnState) {
 		switch state {
 		case http.StateNew:
+			runtime.Gosched()
 			select {
 			case <-counter:
 				if len(counter) == 0 {
@@ -57,7 +62,7 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc) {
 	}
 	http.HandleFunc("/", handler)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
+		if err := LAS(srv); err != nil {
 			t.Error(err)
 		}
 		close(finish)
@@ -69,18 +74,7 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc) {
 	// getFinished: when a "get" function finishes it puts a token here
 	getFinished := make(chan struct{}, 10*max)
 	get := func() {
-		if resp, err := http.Get("http://" + addr + path); err != nil {
-			t.Error(err)
-		} else {
-			if body, err := ioutil.ReadAll(resp.Body); err != nil {
-				t.Error(err)
-			} else {
-				if string(body) != path {
-					t.Errorf("Got message `%s`.", body)
-				}
-			}
-			resp.Body.Close()
-		}
+		getFunc(t, path)
 		getFinished <- struct{}{}
 	}
 	for i := 0; i < 10*max; i++ {
@@ -109,6 +103,7 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc) {
 	select {
 	case <-clientDone:
 		// client exited first, test passed
+		t.Log("Client exited first, the server is graceful.")
 		<-finish
 	case <-finish:
 		t.Error("Server (most probably) exited ungracefully.")
