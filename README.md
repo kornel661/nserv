@@ -10,6 +10,8 @@ API of the v0 version might change without warning, v0 should be considered as a
 
 See [gopkg.in](https://gopkg.in/) on versioning scheme.
 
+For up-to-date changelog and features list see [README](https://github.com/kornel661/nserv/blob/master/README.md).
+
 
 Features
 ========
