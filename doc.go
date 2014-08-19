@@ -16,8 +16,7 @@ or
 
 	go get gopkg.in/kornel661/nserv.v0
 
-Replace v0 by the version you need, alternative path (to the development
-version v0):
-github.com/kornel661/nserv
+Replace v0 by the version you need (v0 is a development version, with no API
+stability guaratees).
 */
 package nserv
