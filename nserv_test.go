@@ -1,9 +1,5 @@
 package nserv_test
 
-/*
-Tests internals of nserv.
-*/
-
 import (
 	"gopkg.in/kornel661/nserv.v0"
 	"net"

@@ -96,7 +96,7 @@ func TestThrottling(t *testing.T) {
 	serverTest(t, srv, handler, (*nserv.Server).ListenAndServe, getFunc)
 }
 
-func TestThrottlingSSL(t *testing.T) {
+func TestThrottlingTLS(t *testing.T) {
 	srv := newServer()
 	LAS := func(srv *nserv.Server) error {
 		return srv.ListenAndServeTLS("_test.crt", "_test.key")
