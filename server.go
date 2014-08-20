@@ -15,7 +15,7 @@ import (
 type Server struct {
 	http.Server                                     // standard net.Server functionality
 	InitialMaxConns int                             // initial limit on simultaneous connections
-	tlist           chan limitnet.ThrottledListener // list for Close()
+	tlist           chan limitnet.ThrottledListener // list for Close(), MaxConns, etc.
 	twlist          chan limitnet.ThrottledListener // list for Wait()
 	initOnce        sync.Once                       // for initialization
 }
