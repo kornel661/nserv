@@ -37,7 +37,10 @@ func (srv *Server) initialize() {
 // stopped by srv.Stop(). By the time Serve returns the listener listn is closed.
 func (srv *Server) Serve(listn net.Listener) error {
 	srv.initialize()
-	l := limitnet.NewThrottledListener(listn)
+	l, ok := listn.(limitnet.ThrottledListener)
+	if !ok {
+		l = limitnet.NewThrottledListener(listn)
+	}
 	l.MaxConns(srv.InitialMaxConns)
 	srv.tlist <- l
 	err := srv.Server.Serve(l)

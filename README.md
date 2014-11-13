@@ -1,12 +1,12 @@
 nserv
 =====
 
-[nserv](https://gopkg.in/kornel661/nserv.v0) (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit* and *throttling*.
+[nserv](https://gopkg.in/kornel661/nserv.v0) (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit*, *throttling* and *zero downtime restarts*.
 *Throttling* makes it easier to build a DOS-attack-resistant server and *graceful exit* feature makes it easy to write a stoppable server with proper clean-up (e.g., closing database connections).
 Nserv has been inspired by the [manners](https://github.com/braintree/manners) package.
 
 The package is in its early stages of development (in the sense that hasn't been tested extensively yet).
-API of the v0 version might change without warning, v0 should be considered as a unstable/development version.
+API of the v0 version might change without warning, v0 should be considered as an unstable/development version.
 
 See [gopkg.in](https://gopkg.in/) on versioning scheme.
 

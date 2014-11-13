@@ -16,12 +16,6 @@ const (
 	addr = "localhost:1234"
 )
 
-func init() {
-	// enable parallelism (if your hardware supports it)
-	//runtime.GOMAXPROCS(runtime.NumCPU())
-	// use "-cpu N" flag
-}
-
 // serverTest tests server srv, checks throttling and gracefuf exit
 // LAS is a ListenAndServe-type function applied to srv
 // getFunc should get addr/path
@@ -49,7 +43,7 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
 	srv.ConnState = func(conn net.Conn, state http.ConnState) {
 		switch state {
 		case http.StateNew:
-			runtime.Gosched()
+			//runtime.Gosched()
 			select {
 			case <-counter:
 				// took a token
@@ -58,12 +52,14 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
 				}
 			default:
 				// no tokens in the counter, the limit's been exceeded
-				t.Error("Exceeded limit of simultaneous connections.")
+				t.Error("Possible error. Exceeded(?) limit of simultaneous connections.")
 				// take the token we missed
 				<-counter
 			}
 		case http.StateClosed, http.StateHijacked:
-			// return the token (before-? the connection is closed)
+			// return the token (before or after? the connection is closed)
+			// FIXME: needs to be before, otherwise might get false positives
+			//        errors of exceeding the limit
 			counter <- struct{}{}
 		}
 	}
@@ -118,11 +114,11 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
 		t.Log("Client exited first, the server is graceful.")
 		<-finish
 	case <-finish:
-		t.Error("Server (most probably) exited ungracefully.")
+		t.Error("Error. Server (most probably) exited ungracefully.")
 		<-clientDone
 	}
 
 	if n := len(counter); n != cap(counter) {
-		t.Errorf("The number of tokens in the counter is: %d.\n", n)
+		t.Errorf("Error. The number of tokens in the counter is: %d.\n", n)
 	}
 }

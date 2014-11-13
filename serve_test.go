@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// TestServerStop checks if stopping the server works.
 func TestServerStop(t *testing.T) {
 	srv := newServer()
 	finish := make(chan struct{})
@@ -29,6 +30,7 @@ func TestServerStop(t *testing.T) {
 	}
 }
 
+// TestServerStopTLS checks if stopping the TLS server works.
 func TestServerStopTLS(t *testing.T) {
 	srv := newServer()
 	finish := make(chan struct{})
