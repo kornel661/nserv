@@ -34,6 +34,4 @@ func ExampleServer() {
 	if err := srv.ListenAndServe(); err != nil {
 		log.Println(err)
 	}
-	// wait for all connections to finish
-	srv.Wait()
 }

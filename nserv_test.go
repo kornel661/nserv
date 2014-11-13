@@ -43,7 +43,9 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
 	srv.ConnState = func(conn net.Conn, state http.ConnState) {
 		switch state {
 		case http.StateNew:
-			//runtime.Gosched()
+			// give other connections chance to return their tokens
+			runtime.Gosched()
+			time.Sleep(delay / 2)
 			select {
 			case <-counter:
 				// took a token

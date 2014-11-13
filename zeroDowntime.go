@@ -9,10 +9,15 @@ import (
 // InitializeZeroDowntime sets up the commandline flags used by this package for
 // supporting zero-downtime restarts. See also: limitnet.InitializeZeroDowntime().
 // You need to execute flag.Parse() after InitializeZeroDowntime() for it to work.
-// See "github.com/kornel661/limitnet.v0/ZeroDowntime_example" how to use this
+// See "gopkg.in/kornel661/limitnet.v0/ZeroDowntime-example" how to use this
 // feature.
 func InitializeZeroDowntime() {
 	limitnet.InitializeZeroDowntime()
+}
+
+// CanResumeServe tells if it seems possible to resume serving.
+func CanResumeServe() bool {
+	return limitnet.CanRetrieveListeners()
 }
 
 // ResumeServe tries to resume serving. Returns true if resuption was successful.
@@ -32,7 +37,7 @@ func (srv *Server) ResumeServe() (ok bool, err error) {
 // as currently executing program with command line arguments args. The newly
 // executed program inherits the file descriptor the srv server used.
 func (srv *Server) ZeroDowntimeRestart(args ...string) error {
-	return srv.OperateOnListener(func(l limitnet.ThrottledListener) error {
+	err := srv.OperateOnListener(func(l limitnet.ThrottledListener) error {
 		// prepare the command to be executed
 		cmd, err := limitnet.PrepareCmd("", args, nil, l)
 		if err != nil {
@@ -41,6 +46,10 @@ func (srv *Server) ZeroDowntimeRestart(args ...string) error {
 		// start the command, return error
 		return cmd.Start()
 	})
+	if err == nil {
+		srv.Stop()
+	}
+	return err
 }
 
 // OperateOnListener applies function fun to the server's listener. It ensures
