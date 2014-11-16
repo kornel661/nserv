@@ -58,7 +58,9 @@ func (srv *Server) ZeroDowntimeRestart(args ...string) error {
 			return err
 		}
 		// start the command, return error
-		return cmd.Start()
+		err = cmd.Start()
+		cmd.ExtraFiles[0].Close() // close unused file
+		return err
 	})
 	if err == nil {
 		srv.Stop()
