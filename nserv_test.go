@@ -16,7 +16,7 @@ const (
 	addr = "localhost:1234"
 )
 
-// serverTest tests server srv, checks throttling and gracefuf exit
+// serverTest tests server srv, checks throttling and graceful exit
 // LAS is a ListenAndServe-type function applied to srv
 // getFunc should get addr/path
 func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
@@ -93,7 +93,7 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
 		<-getFinished
 	}
 
-	// test gracefull shutdown
+	// test graceful shutdown
 	t.Log("Testing graceful shutdown...")
 	clientDone := make(chan struct{})
 	// client

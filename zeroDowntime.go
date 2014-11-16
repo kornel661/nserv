@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// InitializeZeroDowntime sets up the commandline flags used by this package for
+// InitializeZeroDowntime sets up the command-line flags used by this package for
 // supporting zero-downtime restarts. See also: limitnet.InitializeZeroDowntime().
 // You need to execute flag.Parse() after InitializeZeroDowntime() for it to work.
 // See "gopkg.in/kornel661/limitnet.v0/ZeroDowntime-example" how to use this
@@ -24,7 +24,7 @@ func CanResume() bool {
 // ResumeAndServe tries to resume serving.
 // Typically you execute InitializeZeroDowntime() and flag.Parse() first.
 //
-// First, limitnet.RetrieveListeners() is called to retrieive a listener. Next,
+// First, limitnet.RetrieveListeners() is called to retrieve a listener. Next,
 // if either of srv.ReadTimeout, srv.WriteTimeout or srv.MaxConns is 0, it's
 // going to be set to a 'sane' default value, see the corresponding Default...
 // variables. Finally, srv.Serve method is invoked with the retrieved listener
@@ -48,7 +48,7 @@ func (srv *Server) ResumeAndServe() error {
 // as currently executing program with command line arguments args. The newly
 // executed program inherits the file descriptor the srv server used.
 //
-// Error behaviour similar to Server.OperateOnListener or due to command
+// Error behavior similar to Server.OperateOnListener or due to command
 // execution error.
 func (srv *Server) ZeroDowntimeRestart(args ...string) error {
 	err := srv.OperateOnListener(func(l limitnet.ThrottledListener) error {
@@ -67,7 +67,7 @@ func (srv *Server) ZeroDowntimeRestart(args ...string) error {
 }
 
 // CopyListenerFD returns DUP of the file descriptor associated with the listener.
-// If the server isn't running the behaviour is as in Server.OperateOnListener.
+// If the server isn't running the behavior is as in Server.OperateOnListener.
 func (srv *Server) CopyListenerFD() (fd *os.File, err error) {
 	srv.OperateOnListener(func(l limitnet.ThrottledListener) error {
 		fd, err = limitnet.CopyFD(l)

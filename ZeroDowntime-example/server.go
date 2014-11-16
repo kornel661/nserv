@@ -1,7 +1,7 @@
 // This program illustrates how to write a simple server with zero-downtime
 // restarts using the nserv package. Try running the program with -n=X command
 // line option for some natural number X>0.
-// Sending SIGINT signal (ususally ctrl+c) to the server will result in zero
+// Sending SIGINT signal (usually ctrl+c) to the server will result in zero
 // downtime restart if X>0.
 package main
 
@@ -50,7 +50,7 @@ func main() {
 			srv.Stop()
 		} else { // restart
 			log.Println("Caught signal. Trying to restart with zero downtime.")
-			// prepare the commandline argument (the number of restarts to go)
+			// prepare the command-line argument (the number of restarts to go)
 			arg := fmt.Sprintf("-n=%d", *numRestarts-1)
 			// the line below stops the server (srv.Serve will terminate only
 			// after all connections are finished) and runs this program with
