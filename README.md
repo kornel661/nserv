@@ -1,12 +1,13 @@
 nserv
 =====
 
-[nserv](https://gopkg.in/kornel661/nserv.v0) (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit* and *throttling*.
+[nserv](https://gopkg.in/kornel661/nserv.v0) (nice server) Go package provides a variation of standard http.Server enhanced with *graceful exit*, *throttling* and *zero downtime restarts*.
 *Throttling* makes it easier to build a DOS-attack-resistant server and *graceful exit* feature makes it easy to write a stoppable server with proper clean-up (e.g., closing database connections).
+*Zero downtime restarts* feature enables you to perform updates to the server without interrupting active clients.
 Nserv has been inspired by the [manners](https://github.com/braintree/manners) package.
 
 The package is in its early stages of development (in the sense that hasn't been tested extensively yet).
-API of the v0 version might change without warning, v0 should be considered as a unstable/development version.
+API of the v0 version might change without warning, v0 should be considered as an unstable/development version.
 
 See [gopkg.in](https://gopkg.in/) on versioning scheme.
 
@@ -19,7 +20,10 @@ Features
 * Full functionality of the standard http.Server.
 * Limiting number of simultaneous connections.
   The limit can be dynamically changed while the server is running.
-* Gracefull exit.
+* Graceful exit.
+* Zero downtime restarts (version v0).
+  You can stop running server and hand off responsibility of serving new clients to a different program (e.g., an updated version of the server).
+  All without interrupting active clients.
 
 
 Usage
@@ -39,7 +43,7 @@ Versions
 ========
 
 * Bleeding-edge development version (github.com/kornel661/nserv)
- [![GoDoc](https://godoc.org/github.com/kornel661/nserv?status.svg)](https://godoc.org/github.com/kornel661/nserv)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/github.com/kornel661/nserv)
+  [![GoDoc](https://godoc.org/github.com/kornel661/nserv?status.svg)](https://godoc.org/github.com/kornel661/nserv)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/github.com/kornel661/nserv)
 * Development version (v0)
   [![GoDoc](https://godoc.org/gopkg.in/kornel661/nserv.v0?status.svg)](https://godoc.org/gopkg.in/kornel661/nserv.v0)  [![GoWalker](https://gowalker.org/api/v1/badge)](https://gowalker.org/gopkg.in/kornel661/nserv.v0) [![GoCover](http://gocover.io/_badge/gopkg.in/kornel661/nserv.v0)](http://gocover.io/gopkg.in/kornel661/nserv.v0)
 * Initial version with stable API (v1)
@@ -56,6 +60,7 @@ Goals
 Changelog
 =========
 
+* 2014.11.16 (version v0): Initial implementation of zero downtime restarts.
 * 2014.08.18 (version v1): Created version v1 - its API should be stable, though
   it isn't well-tested yet. Methods & fields can be added to the Server struct.
 * 2014.08.16 (version v0): Testing & bug hunting season opened.
