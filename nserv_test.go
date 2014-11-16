@@ -120,6 +120,8 @@ func serverTest(t *testing.T, srv *nserv.Server, handler http.HandlerFunc,
 		<-clientDone
 	}
 
+	runtime.Gosched()
+	time.Sleep(delay)
 	if n := len(counter); n != cap(counter) {
 		t.Errorf("Error. The number of tokens in the counter is: %d.\n", n)
 	}

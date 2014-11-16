@@ -17,14 +17,19 @@ import (
 )
 
 func main() {
+	// record the time of  launch
 	startTime := time.Now()
 	defer func() {
 		log.Printf("Exitting instance started at %v.\n", startTime)
 	}()
+
+	// how many restarts left?
 	numRestarts := flag.Int("n", 0, "-n=[number of zero-downtime restarts before exit]")
 	if *numRestarts < 0 {
 		*numRestarts = 0
 	}
+
+	// prepare for zero downtime restart
 	nserv.InitializeZeroDowntime()
 	flag.Parse()
 
@@ -34,8 +39,9 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, I was launched at %v. Still %d zero-downtime restarts to go.", startTime, *numRestarts)
 	})
+
 	// catch signals:
-	signals := make(chan os.Signal, 1)
+	signals := make(chan os.Signal)
 	signal.Notify(signals, os.Interrupt, os.Kill)
 	go func() {
 		<-signals
@@ -55,22 +61,19 @@ func main() {
 			srv.ZeroDowntimeRestart(arg)
 		}
 	}()
+
 	// start or resume serving:
 	log.Printf("Hello, I was launched at %v. Still %d zero-downtime restarts to go.\n", startTime, *numRestarts)
-	if !nserv.CanResumeServe() { // start serving
+	if !nserv.CanResume() { // start serving
 		log.Printf("Serving at http://%s\n", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil {
 			log.Println(err)
 		}
 	} else { // try to resume serving
 		log.Printf("Trying to resume serving at the previous address.\n")
-		ok, err := srv.ResumeServe()
-		if ok {
-			log.Println("Serving resumed. Hurray!")
-		} else {
-			log.Println("Couldn't resume serving! Buu!")
-		}
+		err := srv.ResumeAndServe()
 		if err != nil {
+			log.Println("Couldn't resume serving! Buu! (or other error)")
 			log.Println(err)
 		}
 	}

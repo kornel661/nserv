@@ -58,8 +58,9 @@ func (srv *Server) saneDefaults() {
 // calls Serve to handle requests on incoming connections.  If
 // srv.Addr is blank, ":http" is used.
 //
-// If either of ReadTimeout, WriteTimeout or MaxConns is 0, it's going to be set
-// to a 'sane' default value, see the corresponding Default... variable.
+// If either of srv.ReadTimeout, srv.WriteTimeout or srv.MaxConns is 0, it's
+// going to be set to a 'sane' default value, see the corresponding Default...
+// variables.
 func (srv *Server) ListenAndServe() error {
 	srv.saneDefaults()
 	addr := srv.Addr
