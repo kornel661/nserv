@@ -63,6 +63,8 @@ func (srv *Server) Wait() {
 
 // Stop gracefully stops a running server. Returns false if server had already
 // been stopped before. Can return before the server is actually shut down.
+//
+// Fragile if you tinker with the server's listener.
 func (srv *Server) Stop() bool {
 	srv.SetKeepAlivesEnabled(false) // do it early (as if it matters)
 	srv.initialize()
