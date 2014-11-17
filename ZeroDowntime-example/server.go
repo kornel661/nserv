@@ -3,7 +3,7 @@
 // line option for some natural number X>0.
 // Sending SIGINT signal (usually ctrl+c) to the server will result in zero
 // downtime restart if X>0.
-package main
+package main // import "gopkg.in/kornel661/nserv.v0/ZeroDowntime-example"
 
 import (
 	"flag"
